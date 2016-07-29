@@ -18,16 +18,7 @@ class CalculatorBrain {
     var description = " "
     var isPartialResult = false
     
-    private var accumulator: Double {
-        get {
-            return self.accumulator
-        }
-        set {
-            self.accumulator = newValue
-            buffer = formattedAccumulator
-        }
-    }
-    
+    private var accumulator = 0.0
     private var formattedAccumulator: String {
         get {
             return decimalFormatter.stringFromNumber(accumulator)!
@@ -73,11 +64,11 @@ class CalculatorBrain {
         decimalFormatter.numberStyle = NSNumberFormatterStyle.DecimalStyle
         decimalFormatter.maximumFractionDigits = 6
         decimalFormatter.minimumFractionDigits = 0
-        accumulator = 0.0
     }
     
     func setOperand(operand: Double) {
         accumulator = operand
+        buffer = formattedAccumulator
         if !isPartialResult {
             description = " "
         }
@@ -99,6 +90,7 @@ class CalculatorBrain {
             case .UnaryOperation(let function):
                 if isPartialResult {
                     description += "\(symbol)(\(buffer ?? formattedAccumulator))"
+                    buffer = nil
                 } else {
                     if (description == " ") {
                         description = "\(symbol)(\(buffer ?? "0"))"
@@ -107,15 +99,16 @@ class CalculatorBrain {
                     }
                 }
                 accumulator = function(accumulator)
-                executePendingBinaryOperation()
             case .BinaryOperation(let function):
-                description += "\(buffer!)\(symbol)"
+                description += "\(buffer ?? formattedAccumulator)\(symbol)"
+                buffer = nil
                 
                 executePendingBinaryOperation()
                 pending = PendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
                 isPartialResult = true
             case .Equals:
-                description += buffer!
+                description += buffer ?? formattedAccumulator
+                buffer = nil
                 executePendingBinaryOperation()
             }
         }

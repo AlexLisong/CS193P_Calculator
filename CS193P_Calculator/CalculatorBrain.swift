@@ -19,7 +19,14 @@ class CalculatorBrain {
     var isPartialResult = false
     
     private var accumulator = 0.0
+    private var formattedAccumulator: String {
+        get {
+            return decimalFormatter.stringFromNumber(accumulator)!
+        }
+    }
+    
     private var pending: PendingBinaryOperationInfo?
+    private let decimalFormatter = NSNumberFormatter()
     
     // The following bool flag is not necessary. 
     // To-do: use a buffer to handle the description output
@@ -56,6 +63,12 @@ class CalculatorBrain {
         var firstOperand: Double
     }
     
+    init() {
+        decimalFormatter.numberStyle = NSNumberFormatterStyle.DecimalStyle
+        decimalFormatter.maximumFractionDigits = 6
+        decimalFormatter.minimumFractionDigits = 0
+    }
+    
     func setOperand(operand: Double) {
         accumulator = operand
         isPreviousOperationConstant = false
@@ -83,7 +96,7 @@ class CalculatorBrain {
                 isPreviousOperationEqual = false
             case .UnaryOperation(let function):
                 if isPartialResult {
-                    description += "√(\(String(accumulator)))"
+                    description += "√(\(formattedAccumulator))"
                 } else {
                     description = "√(\(description))"
                 }
@@ -97,7 +110,7 @@ class CalculatorBrain {
                 if isPreviousOperationConstant || isPreviousOperationUnary || isPreviousOperationEqual {
                     description += symbol
                 } else {
-                    description += String(accumulator) + symbol
+                    description += formattedAccumulator + symbol
                 }
                 executePendingBinaryOperation()
                 pending = PendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
@@ -108,7 +121,7 @@ class CalculatorBrain {
                 isPreviousOperationEqual = false
             case .Equals:
                 if !isPreviousOperationConstant && !isPreviousOperationUnary{
-                    description += String(accumulator)
+                    description += formattedAccumulator
                 }
                 executePendingBinaryOperation()
                 isPreviousOperationEqual = true

@@ -31,10 +31,6 @@ class CalculatorBrain {
     // The following bool flag is not necessary. 
     // To-do: use a buffer to handle the description output
     
-    private var isPreviousOperationConstant = false
-    private var isPreviousOperationUnary = false
-    private var isPreviousOperationEqual = false
-    
     private var operations: Dictionary<String, Operation> = [
         "π" : Operation.Constant(M_PI),
         "e" : Operation.Constant(M_E),
@@ -71,9 +67,6 @@ class CalculatorBrain {
     
     func setOperand(operand: Double) {
         accumulator = operand
-        isPreviousOperationConstant = false
-        isPreviousOperationUnary = false
-        isPreviousOperationEqual = false
         if !isPartialResult {
             description = " "
         }
@@ -83,48 +76,26 @@ class CalculatorBrain {
         if let operation = operations[symbol] {
             switch operation {
             case .Constant(let value):
-                description += symbol
                 accumulator = value
                 if symbol == "C" {
                     pending = nil
                     description = " "
                     isPartialResult = false
                 }
-                
-                isPreviousOperationConstant = true
-                isPreviousOperationUnary = false
-                isPreviousOperationEqual = false
             case .UnaryOperation(let function):
-                if isPartialResult {
+                /*if isPartialResult {
                     description += "√(\(formattedAccumulator))"
                 } else {
                     description = "√(\(description))"
-                }
+                }*/
                 
                 accumulator = function(accumulator)
-                
-                isPreviousOperationUnary = true
-                isPreviousOperationConstant = false
-                isPreviousOperationEqual = false
             case .BinaryOperation(let function):
-                if isPreviousOperationConstant || isPreviousOperationUnary || isPreviousOperationEqual {
-                    description += symbol
-                } else {
-                    description += formattedAccumulator + symbol
-                }
                 executePendingBinaryOperation()
                 pending = PendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
-                
                 isPartialResult = true
-                isPreviousOperationConstant = false
-                isPreviousOperationUnary = false
-                isPreviousOperationEqual = false
             case .Equals:
-                if !isPreviousOperationConstant && !isPreviousOperationUnary{
-                    description += formattedAccumulator
-                }
                 executePendingBinaryOperation()
-                isPreviousOperationEqual = true
             }
         }
     }

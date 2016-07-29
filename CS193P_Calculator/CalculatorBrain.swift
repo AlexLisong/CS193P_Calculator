@@ -20,6 +20,10 @@ class CalculatorBrain {
     
     private var accumulator = 0.0
     private var pending: PendingBinaryOperationInfo?
+    
+    // The following bool flag is not necessary. 
+    // To-do: use a buffer to handle the description output
+    
     private var isPreviousOperationConstant = false
     private var isPreviousOperationUnary = false
     private var isPreviousOperationEqual = false

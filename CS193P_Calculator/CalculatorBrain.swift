@@ -18,12 +18,22 @@ class CalculatorBrain {
     var description = " "
     var isPartialResult = false
     
-    private var accumulator = 0.0
+    private var accumulator: Double {
+        get {
+            return self.accumulator
+        }
+        set {
+            self.accumulator = newValue
+            buffer = formattedAccumulator
+        }
+    }
+    
     private var formattedAccumulator: String {
         get {
             return decimalFormatter.stringFromNumber(accumulator)!
         }
     }
+    private var buffer: String?
     
     private var pending: PendingBinaryOperationInfo?
     private let decimalFormatter = NSNumberFormatter()
@@ -33,7 +43,7 @@ class CalculatorBrain {
     
     private var operations: Dictionary<String, Operation> = [
         "π" : Operation.Constant(M_PI),
-        "e" : Operation.Constant(M_E),
+    "e" : Operation.Constant(M_E),
         "C" : Operation.Constant(0.0),
         "√" : Operation.UnaryOperation(sqrt),
         "cos" : Operation.UnaryOperation(cos),
@@ -63,6 +73,7 @@ class CalculatorBrain {
         decimalFormatter.numberStyle = NSNumberFormatterStyle.DecimalStyle
         decimalFormatter.maximumFractionDigits = 6
         decimalFormatter.minimumFractionDigits = 0
+        accumulator = 0.0
     }
     
     func setOperand(operand: Double) {
@@ -77,24 +88,34 @@ class CalculatorBrain {
             switch operation {
             case .Constant(let value):
                 accumulator = value
+                buffer = symbol
+                
                 if symbol == "C" {
                     pending = nil
                     description = " "
+                    buffer = nil
                     isPartialResult = false
                 }
             case .UnaryOperation(let function):
-                /*if isPartialResult {
-                    description += "√(\(formattedAccumulator))"
+                if isPartialResult {
+                    description += "\(symbol)(\(buffer ?? formattedAccumulator))"
                 } else {
-                    description = "√(\(description))"
-                }*/
-                
+                    if (description == " ") {
+                        description = "\(symbol)(\(buffer ?? "0"))"
+                    } else {
+                        description = "\(symbol)(\(description))"
+                    }
+                }
                 accumulator = function(accumulator)
+                executePendingBinaryOperation()
             case .BinaryOperation(let function):
+                description += "\(buffer!)\(symbol)"
+                
                 executePendingBinaryOperation()
                 pending = PendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
                 isPartialResult = true
             case .Equals:
+                description += buffer!
                 executePendingBinaryOperation()
             }
         }
